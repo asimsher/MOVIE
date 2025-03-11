@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 from django.core.validators import MinValueValidator, MaxValueValidator
+from multiselectfield import MultiSelectField
 STATUS_CHOICES = (
     ('pro', 'pro'),
     ('simple', 'simple')
@@ -10,7 +11,8 @@ STATUS_CHOICES = (
 
 class Profile(AbstractUser):
     age = models.PositiveSmallIntegerField(validators=[MinValueValidator(18),
-                                                       MaxValueValidator(60)], null=True, blank=True)
+                                                       MaxValueValidator(60)],
+                                           null=True, blank=True)
     phone_number = PhoneNumberField(default='+996', null=True, blank=True)
 
     status = models.CharField(max_length=16,choices=STATUS_CHOICES, default='simple')
@@ -20,16 +22,17 @@ class Profile(AbstractUser):
 
 
 class Country(models.Model):
-   country_name = models.CharField(max_length=32, unique=True)
+    country_name = models.CharField(max_length=32, unique=True)
 
-   def __str__(self):
-       return self.country_name
+    def __str__(self):
+        return self.country_name
 
 
 class Director(models.Model):
     director_name = models.CharField(max_length=32)
-    bio = models.CharField(max_length=32)
-    age = models.PositiveSmallIntegerField()
+    bio = models.TextField()
+    age = models.PositiveSmallIntegerField(validators=[MinValueValidator(15),
+                                                       MaxValueValidator(100)])
     director_image = models.ImageField(upload_to='director_images')
 
     def __str__(self):
@@ -39,7 +42,8 @@ class Director(models.Model):
 class Actor(models.Model):
     actor_name = models.CharField(max_length=32)
     bio = models.TextField()
-    age = models.PositiveSmallIntegerField()
+    age = models.PositiveSmallIntegerField(validators=[MinValueValidator(15),
+                                                       MaxValueValidator(100)])
     actor_image = models.ImageField(upload_to='actor_images')
 
     def __str__(self):
@@ -67,8 +71,7 @@ class Movie(models.Model):
         ('720p', '720p'),
         ('1080p', '1080p'),
     )
-
-    types = models.CharField(max_length=16, choices=TYPE_CHOICES)
+    types = MultiSelectField(max_length=32, choices=TYPE_CHOICES, max_choices=5)
     movie_time = models.PositiveSmallIntegerField()
     description = models.TextField()
     movie_trailer = models.FileField(upload_to='movie_videos')
@@ -83,6 +86,9 @@ class MovieLanguages(models.Model):
     video = models.FileField(upload_to='movie_languages')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.language} - {self.movie}'
+
 class Moments(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     movie_moments = models.ImageField(upload_to='moments')
@@ -90,8 +96,10 @@ class Moments(models.Model):
 class Rating(models.Model):
     user = models.ForeignKey(Profile, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    stars = models.IntegerField(choices=[(i, str(i)) for i in range(1, 11)])
-    text = models.TextField()
+    stars = models.IntegerField(choices=[(i, str(i)) for i in range(1, 11)],
+                                null=True, blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
+    text = models.TextField(null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

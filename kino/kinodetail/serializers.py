@@ -1,14 +1,7 @@
 from .models import *
 from rest_framework import serializers
 
-
 class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ['id', 'username', 'first_name', 'last_name', 'age', 'phone_number', 'status']
-
-
-class ProfileDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['id', 'username', 'first_name', 'last_name', 'age', 'phone_number', 'status']
@@ -38,7 +31,14 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ['id', 'genre_name']
 
 
-class MovieSerializer(serializers.ModelSerializer):
+class MovieListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = ['id', 'movie_name', 'movie_image', 'actor',
+                  'year', 'genre', 'country']
+
+
+class MovieDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = '__all__'
